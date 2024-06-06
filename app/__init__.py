@@ -13,9 +13,11 @@ jwt = JWTManager()  # Flask擴展，用於處理基於JSON Web Tokens (JWT) 的�
 def create_app():
     app = Flask(__name__)
 
+    # 加載 .env 文件
     load_dotenv()
     app.config['MONGO_URI'] = os.getenv('MONGO_URI')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+    app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER')
 
     # 初始化擴展
     mongo.init_app(app)
