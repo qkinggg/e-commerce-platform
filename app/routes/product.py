@@ -76,6 +76,7 @@ def delete_product(product_id):
 
 @product_bp.route('/upload_image', methods=['POST'])
 def upload_image():
+    # 檢查請求中是否包含圖片文件
     if 'image' not in request.files:
         return jsonify({"msg": "No image file"}), 400
 
@@ -84,6 +85,7 @@ def upload_image():
         return jsonify({"msg": "No selected file"}), 400
 
     if file and allowed_file(file.filename):
+        # 使用安全文件名將圖片保存到指定的上傳文件夾
         filename = secure_filename(file.filename)
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
