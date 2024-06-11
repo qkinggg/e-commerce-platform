@@ -31,17 +31,15 @@ def create_app():
     # 註冊藍圖（在後續步驟中創建）
     from .routes.auth import auth_bp
     from .routes.product import product_bp
+    from .routes.cart import cart_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(product_bp, url_prefix='/product')
-    '''
-    
-    from .routes.cart import cart_bp
+    app.register_blueprint(cart_bp, url_prefix='/cart')
+
+    '''   
     from .routes.order import order_bp
 
-    
-    
-    app.register_blueprint(cart_bp, url_prefix='/cart')
     app.register_blueprint(order_bp, url_prefix='/order')
     '''
     return app
