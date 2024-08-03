@@ -2,6 +2,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import mongo
+from app.models import Product, CartItem
 from bson import ObjectId
 
 cart_bp = Blueprint('cart', __name__)
@@ -18,23 +19,16 @@ def add_to_cart():
         return jsonify({"msg": "Missing product_id or quantity"}), 400
 
     # 檢查產品是否存在於 products 集合中
-    product = mongo.db.products.find_one({"_id": ObjectId(product_id)})
+    product = Product.find_by_id(product_id)
     if not product:
         return jsonify({"msg": "Product not found"}), 404
 
-    cart_item = mongo.db.cart.find_one({"user_id": user_id, "product_id": product_id})
-
+    cart_item = CartItem.find_one(user_id, product_id)
     if cart_item:
-        mongo.db.cart.update_one(
-            {"_id": cart_item["_id"]},
-            {"$inc": {"quantity": quantity}}
-        )
+        CartItem.update_quantity(user_id, product_id, quantity)
     else:
-        mongo.db.cart.insert_one({
-            "user_id": user_id,
-            "product_id": product_id,
-            "quantity": quantity
-        })
+        new_item = CartItem(user_id, product_id, quantity)
+        new_item.save()
 
     return jsonify({"msg": "Product added to cart"}), 201
 
@@ -43,11 +37,11 @@ def add_to_cart():
 def view_cart():
     user_id = get_jwt_identity()
     # 查找用戶購物車中的所有項目
-    cart_items = list(mongo.db.cart.find({"user_id": user_id}))
+    cart_items = CartItem.find_by_user(user_id)
     result = []
 
     for item in cart_items:
-        product = mongo.db.products.find_one({"_id": ObjectId(item["product_id"])})
+        product = Product.find_by_id(item["product_id"])
         if product:
             item_data = {
                 "product_id": item["product_id"],
@@ -57,7 +51,7 @@ def view_cart():
             }
             result.append(item_data)
         else:
-            print(f"產品ID {item['product_id']} 不存在於 products 集合中。")
+            print(f"Product ID {item['product_id']} not found in products collection.")
 
     return jsonify(result), 200
 
@@ -72,7 +66,7 @@ def remove_from_cart():
     if not product_id:
         return jsonify({"msg": "Missing product_id"}), 400
 
-    result = mongo.db.cart.delete_one({"user_id": user_id, "product_id": product_id})
+    result = CartItem.delete_one(user_id, product_id)
 
     if result.deleted_count == 0:
         return jsonify({"msg": "Product not found in cart"}), 404

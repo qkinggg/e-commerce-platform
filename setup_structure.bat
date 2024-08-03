@@ -10,6 +10,7 @@ echo. > auth.py
 echo. > product.py
 echo. > cart.py
 echo. > order.py
+echo. > admin.py
 cd ..
 mkdir templates
 cd templates

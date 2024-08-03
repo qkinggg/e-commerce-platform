@@ -33,10 +33,12 @@ def create_app():
     from .routes.product import product_bp
     from .routes.cart import cart_bp
     from .routes.order import order_bp
+    from .routes.admin import admin_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(product_bp, url_prefix='/product')
     app.register_blueprint(cart_bp, url_prefix='/cart')
     app.register_blueprint(order_bp, url_prefix='/order')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
     return app

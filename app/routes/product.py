@@ -1,6 +1,7 @@
 # app/routes/product.py
 from flask import Blueprint, request, jsonify, current_app
 from app import mongo
+from app.models import Product
 from bson import ObjectId
 from werkzeug.utils import secure_filename
 import os
@@ -18,21 +19,17 @@ def add_product():
 
     if not name or not price or not stock:
         return jsonify({"msg": "Missing required fields"}), 400
-    # 將產品數據插入到 MongoDB 的 products 集合中，並獲取插入的產品 ID。
-    product_id = mongo.db.products.insert_one({
-        "name": name,
-        "description": description,
-        "price": price,
-        "stock": stock,
-        "image_url": image_url
-    }).inserted_id
-    # 返回一個包含成功消息和產品 ID 的 JSON 響應
+
+    product = Product(name=name, description=description, price=price, stock=stock, image_url=image_url)
+    if not product:
+        return jsonify({"msg": "Product not found"}), 404
+    product_id = product.save()
+
     return jsonify({"msg": "Product added successfully", "id": str(product_id)}), 201
 
 @product_bp.route('/<product_id>', methods=['GET'])
 def get_product(product_id):
-    product = mongo.db.products.find_one({"_id": ObjectId(product_id)})
-
+    product = Product.find_by_id(ObjectId(product_id))
     if not product:
         return jsonify({"msg": "Product not found"}), 404
 
@@ -55,7 +52,7 @@ def update_product(product_id):
     if 'image_url' in data:
         update_fields['image_url'] = data['image_url']
 
-    result = mongo.db.products.update_one(
+    result = Product.update_one(
         {"_id": ObjectId(product_id)},
         {"$set": update_fields}
     )
@@ -67,7 +64,7 @@ def update_product(product_id):
 
 @product_bp.route('/<product_id>', methods=['DELETE'])
 def delete_product(product_id):
-    result = mongo.db.products.delete_one({"_id": ObjectId(product_id)})
+    result = Product.delete_by_id(ObjectId(product_id))
 
     if result.deleted_count == 0:
         return jsonify({"msg": "Product not found"}), 404
@@ -76,7 +73,6 @@ def delete_product(product_id):
 
 @product_bp.route('/upload_image', methods=['POST'])
 def upload_image():
-    # 檢查請求中是否包含圖片文件
     if 'image' not in request.files:
         return jsonify({"msg": "No image file"}), 400
 
@@ -85,7 +81,6 @@ def upload_image():
         return jsonify({"msg": "No selected file"}), 400
 
     if file and allowed_file(file.filename):
-        # 使用安全文件名將圖片保存到指定的上傳文件夾
         filename = secure_filename(file.filename)
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
@@ -97,10 +92,7 @@ def allowed_file(filename):
 
 @product_bp.route('/list', methods=['GET'])
 def list_products():
-    # 從products集合中查找所有用戶並返回JSON
-    products = mongo.db.products.find()
-    result = []
+    products = Product.find_all()
     for product in products:
         product['_id'] = str(product['_id'])
-        result.append(product)
-    return jsonify(result), 200
+    return jsonify(products), 200
