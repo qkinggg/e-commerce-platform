@@ -3,4 +3,5 @@ venv/
 *.log
 .vscode/
 .DS_Store
+.env
 Thumbs.db
