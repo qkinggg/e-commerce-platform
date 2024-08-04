@@ -27,6 +27,10 @@ class User:
     def find_by_id(user_id):
         return db.users.find_one({"_id": ObjectId(user_id)})
     '''
+    @staticmethod
+    def is_admin(user_id):
+        user = User.find_by_email(user_id)
+        return user and user.get('role') == 'admin'
 
 class Product:
     def __init__(self, name, description, price, stock, image_url=None):
@@ -114,7 +118,8 @@ class Order:
             "total_price": self.total_price,
             "status": self.status
         }
-        db.orders.insert_one(order)
+        result = db.orders.insert_one(order)
+        return result.inserted_id  # 僅返回插入的訂單 ID
 
     @staticmethod
     def find_all():

@@ -1,12 +1,10 @@
 #!/bin/bash
 
-echo "登錄用戶..."
-TOKEN=$(curl -s -X POST http://127.0.0.1:5000/auth/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}' | jq -r '.access_token')
-
-
+echo "登錄admin..."
+TOKEN=$(curl -s -X POST http://127.0.0.1:5000/auth/login -H "Content-Type: application/json" -d '{"email": "admin@example.com", "password": "admin"}' | jq -r '.access_token')
 
 # 獲取所有產品並提取第一個和第二個產品的ID
-PRODUCT_IDS=$(curl -s -X GET http://127.0.0.1:5000/product/list | jq -r '.[0,1]._id')
+PRODUCT_IDS=$(curl -s -X GET http://127.0.0.1:5000/admin/products -H "Authorization: Bearer $TOKEN" | jq -r '.[0,1]._id')
 PRODUCT_ID_ARRAY=($(echo $PRODUCT_IDS | tr -d '\r'))
 
 # 提取第一個和第二個產品的ID到變量
