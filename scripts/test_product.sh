@@ -36,14 +36,14 @@ curl -s -X PUT http://127.0.0.1:5000/product/$PRODUCT_ID -H "Content-Type: appli
 
 echo "產品更新成功"
 echo -e "\n\n"
-<<EOF
+
 # 刪除產品
 echo "刪除產品..."
 curl -s -X DELETE http://127.0.0.1:5000/product/$PRODUCT_ID | jq
 
 echo "產品刪除成功"
 echo -e "\n\n"
-EOF
+
 # 上傳圖片
 echo "上傳圖片..."
 curl -s -X POST http://127.0.0.1:5000/product/upload_image -F "image=@./pic/sample.png" | jq

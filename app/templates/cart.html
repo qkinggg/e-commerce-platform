@@ -1,0 +1,142 @@
+<!-- app/templates/cart.html -->
+{% extends "base.html" %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<h1>Your Shopping Cart</h1>
+
+{% if cart_items %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cart_items %}
+        <tr>
+            <td>
+                <img src="{{ url_for('static', filename='uploads/' + item.product_image) }}" alt="{{ item.product_name }}" style="width: 50px;">
+                {{ item.product_name }}
+            </td>
+            <td>{{ item.product_description }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ item.product_price }}</td>
+            <td>
+                <button onclick="updateCartItem('{{ item.product_id }}', {{ item.quantity + 1 }})" class="btn btn-sm btn-success">+</button>
+                <button onclick="updateCartItem('{{ item.product_id }}', {{ item.quantity - 1 }})" class="btn btn-sm btn-warning">-</button>
+                <button onclick="removeCartItem('{{ item.product_id }}')" class="btn btn-sm btn-danger">Remove</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<button onclick="createOrder()" class="btn btn-primary">Create Order</button>
+{% else %}
+<p>Your cart is empty.</p>
+{% endif %}
+
+<script>
+function updateCartItem(productId, quantity) {
+    const jwtTokenElement = document.getElementById('jwt-token');
+    if (!jwtTokenElement) {
+        console.error('JWT token element not found');
+        return;
+    }
+    
+    const token = jwtTokenElement.dataset.token;
+    if (!token) {
+        console.error('JWT token is not available');
+        return;
+    }
+
+    if (quantity < 1) {
+        removeCartItem(productId);
+        return;
+    }
+
+    fetch('/cart/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_id: productId, quantity: quantity })
+    })
+    .then(response => response.json())
+    .then(data => {
+        location.reload();
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function removeCartItem(productId) {
+    const jwtTokenElement = document.getElementById('jwt-token');
+    if (!jwtTokenElement) {
+        console.error('JWT token element not found');
+        return;
+    }
+    
+    const token = jwtTokenElement.dataset.token;
+    if (!token) {
+        console.error('JWT token is not available');
+        return;
+    }
+
+    fetch('/cart/remove', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.msg) {
+            alert(data.msg);
+        }
+        location.reload();
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function createOrder() {
+    const jwtTokenElement = document.getElementById('jwt-token');
+    if (!jwtTokenElement) {
+        console.error('JWT token element not found');
+        return;
+    }
+
+    const token = jwtTokenElement.dataset.token;
+    if (!token) {
+        console.error('JWT token is not available');
+        return;
+    }
+
+    fetch('/order/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.msg) {
+            alert(data.msg);
+        }
+        if (data.order_id) {
+            // 成功創建訂單後，重定向到結帳頁面，假設你有一個結帳路由 '/checkout'
+            window.location.href = `/checkout?order_id=${data.order_id}`;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}

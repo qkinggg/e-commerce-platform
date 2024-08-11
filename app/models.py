@@ -93,7 +93,7 @@ class CartItem:
     def update_quantity(user_id, product_id, quantity):
         return db.cart.update_one(
             {"user_id": user_id, "product_id": product_id},
-            {"$inc": {"quantity": quantity}}
+            {"$set": {"quantity": quantity}}
         )
 
     @staticmethod
@@ -124,6 +124,10 @@ class Order:
     @staticmethod
     def find_all():
         return list(db.orders.find())
+
+    @staticmethod
+    def find_by_id_and_user(order_id, user_id):
+        return db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
 
     @staticmethod
     def find_by_id(order_id):

@@ -31,7 +31,7 @@ echo -e "\n\n"
 
 # 查看購物車
 echo "查看購物車..."
-curl -s -X GET http://127.0.0.1:5000/cart/view -H "Authorization: Bearer $TOKEN" | jq
+curl -s -X GET http://127.0.0.1:5000/cart/ -H "Authorization: Bearer $TOKEN" | jq
 echo -e "\n\n"
 
 # 移除產品從購物車

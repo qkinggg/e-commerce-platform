@@ -1,5 +1,5 @@
 # app/routes/order.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import CartItem, Order, Product
 from bson import ObjectId
@@ -35,6 +35,23 @@ def create_order():
     CartItem.delete_all(user_id)
 
     return jsonify({"msg": "Order created successfully", "order_id": str(order_id)}), 201
+
+@order_bp.route('/checkout', methods=['GET'])
+@jwt_required()
+def checkout():
+    order_id = request.args.get('order_id')
+    user_id = get_jwt_identity()
+    print(order_id, user_id)
+
+    order = Order.find_by_id_and_user({"_id": ObjectId(order_id), "user_id": user_id})
+
+    if not order:
+        return jsonify({"msg": "Order not found"}), 404
+
+    order['_id'] = str(order['_id'])
+    return render_template('checkout.html', order=order)
+
+
 
 @order_bp.route('/<order_id>', methods=['GET'])
 @jwt_required()

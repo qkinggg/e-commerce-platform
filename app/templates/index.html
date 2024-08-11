@@ -1,1 +1,53 @@
- 
+<!-- app/templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Welcome to our E-commerce Platform</h1>
+
+
+{% if current_user %}
+    <p>Logged in as: {{ current_user }}</p>
+    <p id="jwt-token" data-token="{{ access_token }}"></p>
+    <a href="{{ url_for('cart.view_cart') }}" class="btn btn-secondary">View Cart</a>
+    
+{% else %}
+    <p>You are not logged in. Please <a href="{{ url_for('auth.login') }}">log in</a> or <a href="{{ url_for('auth.register') }}">register</a>.</p>
+{% endif %}
+
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4">
+        <div class="card mb-4 shadow-sm">
+            <img src="{{ url_for('static', filename='uploads/' + product.image_url) }}" class="card-img-top" alt="{{ product.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text">{{ product.description }}</p>
+                <p class="card-text"><strong>${{ product.price }}</strong></p>
+                <button class="btn btn-primary" onclick="addToCart('{{ product._id }}')">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function addToCart(productId) {
+    const token = document.getElementById('jwt-token').dataset.token;
+    fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ product_id: productId, quantity: 1 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.msg);
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}

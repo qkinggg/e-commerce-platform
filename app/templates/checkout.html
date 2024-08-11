@@ -1,0 +1,68 @@
+<!-- app/templates/checkout.html -->
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<h1>Checkout</h1>
+
+{% if order %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in order.items %}
+        <tr>
+            <td>{{ item.product_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ item.product_price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Total Price: ${{ order.total_price }}</h3>
+
+<button onclick="payOrder('{{ order._id }}')" class="btn btn-success">Pay Now</button>
+{% else %}
+<p>No order details available.</p>
+{% endif %}
+
+<script>
+function payOrder(orderId) {
+    const jwtTokenElement = document.getElementById('jwt-token');
+    if (!jwtTokenElement) {
+        console.error('JWT token element not found');
+        return;
+    }
+
+    const token = jwtTokenElement.dataset.token;
+    if (!token) {
+        console.error('JWT token is not available');
+        return;
+    }
+
+    fetch('/order/pay', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.msg);
+        if (data.msg === "Order paid successfully") {
+            window.location.href = '/'; // 支付成功後返回首頁或其他頁面
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}
